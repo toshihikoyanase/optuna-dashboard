@@ -1,9 +1,10 @@
-import { Link as LinkIcon } from "@mui/icons-material"
-import { IconButton } from "@mui/material"
-import { FC, useMemo } from "react"
+import { Link as LinkIcon, Search as SearchIcon } from "@mui/icons-material"
+import { Button, IconButton, TextField } from "@mui/material"
+import { FC, useMemo, useState } from "react"
 
 import * as Optuna from "@optuna/types"
 import { DataGrid } from "./DataGrid"
+import { useTrialFilterQuery } from "../hooks/useTrialFilterQuery"
 
 import {
   ColumnDef,
@@ -43,6 +44,8 @@ export const TrialTable: FC<{
     return study.trials.filter((t) => selectedTrialsSet.has(t.number))
   }, [selectedTrials, study.trials])
   const metricNames: string[] = study.metric_names || []
+  const [_smartFilterText, setSmartFilterText] = useState<string>("")
+  const [trialFilter, renderIframe] = useTrialFilterQuery(5);
 
   const columnHelper = createColumnHelper<Optuna.Trial>()
   // biome-ignore lint/suspicious/noExplicitAny: It is difficult to specify this type.
@@ -178,10 +181,39 @@ export const TrialTable: FC<{
   }
 
   return (
-    <DataGrid
-      data={trials}
-      columns={columns}
-      initialRowsPerPage={initialRowsPerPage ?? 50}
-    />
+    <>
+      <TextField
+        id="smart-filter"
+        variant="outlined"
+        placeholder="Smart Filter: please describe the filter condition here, e.g., Number > 10"
+        fullWidth sx={{ maxWidth: 600 }}
+        size="small"
+        onChange={(e) => setSmartFilterText(e.target.value)}
+      />
+      <Button
+        variant="contained"
+        startIcon={<SearchIcon />}
+        onClick={() => {
+          // Implement smart filtering logic here based on _smartFilterText
+          // This is a placeholder for the actual implementation.
+          console.log("Smart filter applied:", _smartFilterText)
+          trialFilter(trials, _smartFilterText)
+            .then((filteredTrials) => {
+              console.log("Filtered trials:", filteredTrials)
+            })
+            .catch((error) => {
+              console.error("Error applying smart filter:", error)
+            })
+
+        }}
+        sx={{ marginBottom: 2 }}
+      />
+      <DataGrid
+        data={trials}
+        columns={columns}
+        initialRowsPerPage={initialRowsPerPage ?? 50}
+      />
+      { renderIframe() }
+    </>
   )
 }
